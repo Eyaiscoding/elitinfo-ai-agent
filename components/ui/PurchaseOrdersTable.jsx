@@ -12,21 +12,21 @@ export function PurchaseOrdersTable({ data }) {
     <Table className="text-center">
       <TableHeader>
         <TableRow>
-          <TableHead>PO ID</TableHead>
-          <TableHead>Supplier ID</TableHead>
-          <TableHead>Order Date</TableHead>
-          <TableHead>Total Amount</TableHead>
-          <TableHead>Status</TableHead>
+          <TableHead className="text-center">PO ID</TableHead>
+          <TableHead className="text-center">Supplier ID</TableHead>
+          <TableHead className="text-center">Order Date</TableHead>
+          <TableHead className="text-center">Total Amount</TableHead>
+          <TableHead className="text-center">Status</TableHead>
         </TableRow>
       </TableHeader>
       <TableBody>
         {data.map((db) => (
           <TableRow key={db._id ?? Math.random()}>
-            <TableCell>{db.POID ?? "N/A"}</TableCell>
-            <TableCell>{db.SupplierID ?? "N/A"}</TableCell>
-            <TableCell>{db.OrderDate ?? "N/A"}</TableCell>
-            <TableCell>{db.TotalAmount ?? "N/A"}</TableCell>
-            <TableCell>{db.Status ?? "N/A"}</TableCell>
+            <TableCell className="text-center">{db.POID ?? "N/A"}</TableCell>
+            <TableCell className="text-center">{db.SupplierID ?? "N/A"}</TableCell>
+            <TableCell className="text-center">{db.OrderDate ?? "N/A"}</TableCell>
+            <TableCell className="text-center">{db.TotalAmount ?? "N/A"}</TableCell>
+            <TableCell className="text-center">{db.Status ?? "N/A"}</TableCell>
           </TableRow>
         ))}
       </TableBody>

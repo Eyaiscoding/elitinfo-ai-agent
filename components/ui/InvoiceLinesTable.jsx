@@ -12,21 +12,21 @@ export function InvoiceLinesTable({ data }) {
     <Table className="text-center">
       <TableHeader>
         <TableRow>
-          <TableHead>Line ID</TableHead>
-          <TableHead>Invoice ID</TableHead>
-          <TableHead>Product ID</TableHead>
-          <TableHead>Quantity</TableHead>
-          <TableHead>Line Total</TableHead>
+          <TableHead className="text-center">Line ID</TableHead>
+          <TableHead className="text-center">Invoice ID</TableHead>
+          <TableHead className="text-center">Product ID</TableHead>
+          <TableHead className="text-center">Quantity</TableHead>
+          <TableHead className="text-center">Line Total</TableHead>
         </TableRow>
       </TableHeader>
       <TableBody>
         {data.map((db) => (
           <TableRow key={db._id ?? Math.random()}>
-            <TableCell>{db.LineID ?? "N/A"}</TableCell>
-            <TableCell>{db.InvoiceID ?? "N/A"}</TableCell>
-            <TableCell>{db.ProductID ?? "N/A"}</TableCell>
-            <TableCell>{db.Quantity ?? "N/A"}</TableCell>
-            <TableCell>{db.LineTotal ?? "N/A"}</TableCell>
+            <TableCell className="text-center">{db.LineID ?? "N/A"}</TableCell>
+            <TableCell className="text-center">{db.InvoiceID ?? "N/A"}</TableCell>
+            <TableCell className="text-center">{db.ProductID ?? "N/A"}</TableCell>
+            <TableCell className="text-center">{db.Quantity ?? "N/A"}</TableCell>
+            <TableCell className="text-center">{db.LineTotal ?? "N/A"}</TableCell>
           </TableRow>
         ))}
       </TableBody>

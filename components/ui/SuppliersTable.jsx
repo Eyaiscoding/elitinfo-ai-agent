@@ -12,21 +12,23 @@ export function SuppliersTable({ data }) {
     <Table className="text-center">
       <TableHeader>
         <TableRow>
-          <TableHead>Name</TableHead>
-          <TableHead>Contact</TableHead>
-          <TableHead>Phone</TableHead>
-          <TableHead>City</TableHead>
-          <TableHead>Country</TableHead>
+          <TableHead className="text-center">Supplier ID</TableHead> {/* Added column */}
+          <TableHead className="text-center">Name</TableHead>
+          <TableHead className="text-center">Contact</TableHead>
+          <TableHead className="text-center">Phone</TableHead>
+          <TableHead className="text-center">City</TableHead>
+          <TableHead className="text-center">Country</TableHead>
         </TableRow>
       </TableHeader>
       <TableBody>
         {data.map((db) => (
-          <TableRow key={db._id ?? Math.random()}>
-            <TableCell>{db.Name ?? "N/A"}</TableCell>
-            <TableCell>{db.Contact ?? "N/A"}</TableCell>
-            <TableCell>{db.Phone ?? "N/A"}</TableCell>
-            <TableCell>{db.City ?? "N/A"}</TableCell>
-            <TableCell>{db.Country ?? "N/A"}</TableCell>
+          <TableRow key={db._id ?? db.SupplierID ?? Math.random()}>
+            <TableCell className="text-center">{db.SupplierID ?? "N/A"}</TableCell>
+            <TableCell className="text-center">{db.Name ?? "N/A"}</TableCell>
+            <TableCell className="text-center">{db.Contact ?? "N/A"}</TableCell>
+            <TableCell className="text-center">{db.Phone ?? "N/A"}</TableCell>
+            <TableCell className="text-center">{db.City ?? "N/A"}</TableCell>
+            <TableCell className="text-center">{db.Country ?? "N/A"}</TableCell>
           </TableRow>
         ))}
       </TableBody>

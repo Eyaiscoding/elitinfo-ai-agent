@@ -1,18 +1,18 @@
 "use client";
+
 import React, { useState, useEffect, useMemo } from "react";
 import axios from "axios";
-import {
-  useCopilotReadable,
-  useCopilotAction,
-} from "@copilotkit/react-core";
+import { useCopilotReadable, useCopilotAction } from "@copilotkit/react-core";
 
-import { Tabledata } from "./Tabledata"; // Customers
+import { Tabledata } from "./Tabledata";
 import { SuppliersTable } from "./SuppliersTable";
 import { ProductsTable } from "./ProductsTable";
 import { InvoicesTable } from "./InvoicesTable";
 import { InvoiceLinesTable } from "./InvoiceLinesTable";
 import { PaymentsTable } from "./PaymentsTable";
 import { PurchaseOrdersTable } from "./PurchaseOrdersTable";
+
+import { Users, Package, FileText, DollarSign } from "lucide-react";
 
 function NLQueryForm() {
   const [customers, setCustomers] = useState([]);
@@ -41,36 +41,21 @@ function NLQueryForm() {
   useEffect(() => {
     async function fetchAll() {
       try {
-        const headers = {
-          "x-apikey": API_KEY,
-          "Content-Type": "application/json",
+        const headers = { "x-apikey": API_KEY, "Content-Type": "application/json" };
+
+        const fetchCollection = async (url, setter) => {
+          const res = await axios.get(url, { headers });
+          setter(Array.isArray(res.data) ? res.data : []);
+          await new Promise((r) => setTimeout(r, 1100));
         };
 
-        const [
-          customersRes,
-          suppliersRes,
-          productsRes,
-          invoicesRes,
-          invoiceLinesRes,
-          paymentsRes,
-          purchaseOrdersRes,
-        ] = await Promise.all([
-          axios.get(urls.customers, { headers }),
-          axios.get(urls.suppliers, { headers }),
-          axios.get(urls.products, { headers }),
-          axios.get(urls.invoices, { headers }),
-          axios.get(urls.invoiceLines, { headers }),
-          axios.get(urls.payments, { headers }),
-          axios.get(urls.purchaseOrders, { headers }),
-        ]);
-
-        setCustomers(customersRes.data);
-        setSuppliers(suppliersRes.data);
-        setProducts(productsRes.data);
-        setInvoices(invoicesRes.data);
-        setInvoiceLines(invoiceLinesRes.data);
-        setPayments(paymentsRes.data);
-        setPurchaseOrders(purchaseOrdersRes.data);
+        await fetchCollection(urls.customers, setCustomers);
+        await fetchCollection(urls.suppliers, setSuppliers);
+        await fetchCollection(urls.products, setProducts);
+        await fetchCollection(urls.invoices, setInvoices);
+        await fetchCollection(urls.invoiceLines, setInvoiceLines);
+        await fetchCollection(urls.payments, setPayments);
+        await fetchCollection(urls.purchaseOrders, setPurchaseOrders);
 
         setLoading(false);
       } catch (err) {
@@ -79,127 +64,61 @@ function NLQueryForm() {
         setLoading(false);
       }
     }
+
     fetchAll();
   }, []);
 
-  // ---------- Expose to CopilotKit ------------------
-  const readableCaps = useMemo(() => {
-    const cap = (arr, n = 50) => Array.isArray(arr) ? arr.slice(0, n) : [];
-    return {
-      customers: cap(customers),
-      suppliers: cap(suppliers),
-      products: cap(products),
-      invoices: cap(invoices),
-      invoiceLines: cap(invoiceLines),
-      payments: cap(payments),
-      purchaseOrders: cap(purchaseOrders),
-    };
-  }, [customers, suppliers, products, invoices, invoiceLines, payments, purchaseOrders]);
+  // Dashboard metrics
+  const dashboardCards = [
+    { title: "Customers", value: customers.length, icon: <Users className="text-green-500" /> },
+    { title: "Products", value: products.length, icon: <Package className="text-blue-500" /> },
+    { title: "Invoices", value: invoices.length, icon: <FileText className="text-yellow-500" /> },
+    { title: "Payments", value: payments.length, icon: <DollarSign className="text-purple-500" /> },
+  ];
 
-  // Readables: tell Groq what the tables look like
-  useCopilotReadable({
-    description: "Customers table with CustomerID, Name, Email, Phone, Address, City, Country",
-    value: JSON.stringify(readableCaps.customers),
-  });
-  useCopilotReadable({
-    description: "Suppliers table with SupplierID, Name, Contact, Phone, City, Country",
-    value: JSON.stringify(readableCaps.suppliers),
-  });
-  useCopilotReadable({
-    description: "Products table with ProductID, Name, Description, UnitPrice, SupplierID",
-    value: JSON.stringify(readableCaps.products),
-  });
-  useCopilotReadable({
-    description: "Invoices table with InvoiceID, CustomerID, InvoiceDate, TotalAmount, Status",
-    value: JSON.stringify(readableCaps.invoices),
-  });
-  useCopilotReadable({
-    description: "InvoiceLines table with LineID, InvoiceID, ProductID, Quantity, LineTotal",
-    value: JSON.stringify(readableCaps.invoiceLines),
-  });
-  useCopilotReadable({
-    description: "Payments table with PaymentID, InvoiceID, PaymentDate, Amount, Method",
-    value: JSON.stringify(readableCaps.payments),
-  });
-  useCopilotReadable({
-    description: "PurchaseOrders table with POID, SupplierID, OrderDate, TotalAmount, Status",
-    value: JSON.stringify(readableCaps.purchaseOrders),
-  });
+  if (loading)
+    return (
+      <div className="flex justify-center py-20">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-4 border-green-500 border-b-4 border-gray-300"></div>
+      </div>
+    );
 
-  // Actions: functions Groq can call
-  useCopilotAction({
-    name: "getInvoicesByCustomer",
-    description: "Return all invoices for a given customer",
-    parameters: [{ name: "customerId", type: "string", required: true }],
-    handler: async ({ customerId }) => {
-      const list = invoices.filter((i) => String(i.CustomerID) === String(customerId));
-      return JSON.stringify(list);
-    },
-  });
+  if (error) return <p className="text-red-600 text-center">{error}</p>;
 
-  useCopilotAction({
-    name: "getProductsBySupplier",
-    description: "Return products for a given supplier",
-    parameters: [{ name: "supplierId", type: "string", required: true }],
-    handler: async ({ supplierId }) => {
-      const list = products.filter((p) => String(p.SupplierID) === String(supplierId));
-      return JSON.stringify(list);
-    },
-  });
-
-  useCopilotAction({
-    name: "getInvoiceBundle",
-    description: "Return invoice with its lines and payments",
-    parameters: [{ name: "invoiceId", type: "string", required: true }],
-    handler: async ({ invoiceId }) => {
-      const invoice = invoices.find((i) => String(i.InvoiceID) === String(invoiceId));
-      const lines = invoiceLines.filter((l) => String(l.InvoiceID) === String(invoiceId));
-      const pays = payments.filter((p) => String(p.InvoiceID) === String(invoiceId));
-      return JSON.stringify({ invoice, lines, payments: pays });
-    },
-  });
-
-  // --------------------------------------------------
-
-  if (loading) return <div>Loading...</div>;
-  if (error) return <p style={{ color: "red" }}>{error}</p>;
+  const renderCard = (title, Component, data) => (
+    <div className="bg-white dark:bg-gray-800 shadow-lg rounded-xl p-5 w-full max-w-7xl mx-auto transition transform hover:-translate-y-1 hover:shadow-2xl duration-300">
+      <h2 className="text-green-600 dark:text-green-400 font-bold text-xl mb-4 border-b border-gray-200 dark:border-gray-700 pb-2">{title}</h2>
+      <div className="overflow-x-auto">
+        <Component data={data} />
+      </div>
+    </div>
+  );
 
   return (
-    <div className="space-y-12">
-      <div>
-        <h2 className="text-xl font-bold text-center">Customers</h2>
-        <Tabledata data={customers} />
+    <div className="space-y-10 px-4 md:px-0">
+      {/* Dashboard cards */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-10">
+        {dashboardCards.map((card, idx) => (
+          <div
+            key={idx}
+            className="flex items-center gap-4 bg-white dark:bg-gray-800 shadow-md rounded-xl p-5 transition hover:scale-105"
+          >
+            <div className="p-3 bg-gray-100 dark:bg-gray-700 rounded-full">{card.icon}</div>
+            <div>
+              <p className="text-gray-500 dark:text-gray-400 text-sm">{card.title}</p>
+              <h3 className="text-2xl font-bold text-gray-900 dark:text-white">{card.value}</h3>
+            </div>
+          </div>
+        ))}
       </div>
 
-      <div>
-        <h2 className="text-xl font-bold text-center">Suppliers</h2>
-        <SuppliersTable data={suppliers} />
-      </div>
-
-      <div>
-        <h2 className="text-xl font-bold text-center">Products</h2>
-        <ProductsTable data={products} />
-      </div>
-
-      <div>
-        <h2 className="text-xl font-bold text-center">Invoices</h2>
-        <InvoicesTable data={invoices} />
-      </div>
-
-      <div>
-        <h2 className="text-xl font-bold text-center">Invoice Lines</h2>
-        <InvoiceLinesTable data={invoiceLines} />
-      </div>
-
-      <div>
-        <h2 className="text-xl font-bold text-center">Payments</h2>
-        <PaymentsTable data={payments} />
-      </div>
-
-      <div>
-        <h2 className="text-xl font-bold text-center">Purchase Orders</h2>
-        <PurchaseOrdersTable data={purchaseOrders} />
-      </div>
+      {renderCard("Customers", Tabledata, customers)}
+      {renderCard("Suppliers", SuppliersTable, suppliers)}
+      {renderCard("Products", ProductsTable, products)}
+      {renderCard("Invoices", InvoicesTable, invoices)}
+      {renderCard("Invoice Lines", InvoiceLinesTable, invoiceLines)}
+      {renderCard("Payments", PaymentsTable, payments)}
+      {renderCard("Purchase Orders", PurchaseOrdersTable, purchaseOrders)}
     </div>
   );
 }
