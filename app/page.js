@@ -9,7 +9,6 @@ import { Moon, Sun } from "lucide-react";
 export default function Page() {
   const [theme, setTheme] = useState("light");
 
-  // Load theme from localStorage
   useEffect(() => {
     const saved = localStorage.getItem("theme") || "light";
     setTheme(saved);
@@ -61,7 +60,7 @@ export default function Page() {
 
       {/* Copilot Assistant */}
       <CopilotPopup
-        instructions="You are assisting the user as best as you can. Answer in the best way possible given the data you have."
+        instructions="You are assisting the user with insights about their database. Use the provided tables (customers, suppliers, products, invoices, payments, etc.) to answer questions and provide summaries."
         labels={{
           title: "ELITINFO Assistant",
           initial: "Need any help?",

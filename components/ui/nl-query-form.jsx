@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState, useEffect } from "react";
 import axios from "axios";
 import { useCopilotReadable, useCopilotAction } from "@copilotkit/react-core";
 
@@ -67,6 +67,68 @@ function NLQueryForm() {
 
     fetchAll();
   }, []);
+
+  // ✅ Expose state to Copilot
+  useCopilotReadable({
+    description: "All database tables from RestDB",
+    value: {
+      customers,
+      suppliers,
+      products,
+      invoices,
+      invoiceLines,
+      payments,
+      purchaseOrders,
+    },
+  });
+
+  // ✅ Add useful Copilot Actions
+  useCopilotAction({
+    name: "getTopCustomers",
+    description: "List top N customers by number of invoices",
+    parameters: [{ name: "limit", type: "number", required: false }],
+    handler: async ({ limit = 5 }) => {
+      const customerInvoiceCounts = customers.map((c) => ({
+        customer: c,
+        count: invoices.filter((inv) => String(inv.CustomerID) === String(c.CustomerID)).length,
+      }));
+      customerInvoiceCounts.sort((a, b) => b.count - a.count);
+      return customerInvoiceCounts.slice(0, limit);
+    },
+  });
+
+  useCopilotAction({
+    name: "getUnpaidInvoices",
+    description: "Return all invoices that are unpaid",
+    handler: async () => {
+      return invoices.filter((inv) => inv.Status?.toLowerCase() === "unpaid");
+    },
+  });
+
+  useCopilotAction({
+    name: "getTopProducts",
+    description: "List top N products by sales (based on invoice lines)",
+    parameters: [{ name: "limit", type: "number", required: false }],
+    handler: async ({ limit = 5 }) => {
+      const productSales = products.map((p) => {
+        const totalSold = invoiceLines
+          .filter((line) => String(line.ProductID) === String(p.ProductID))
+          .reduce((sum, line) => sum + (Number(line.Quantity) || 0), 0);
+        return { product: p, totalSold };
+      });
+      productSales.sort((a, b) => b.totalSold - a.totalSold);
+      return productSales.slice(0, limit);
+    },
+  });
+
+  useCopilotAction({
+    name: "getSupplierProducts",
+    description: "Return all products for a given supplier",
+    parameters: [{ name: "supplierId", type: "string", required: true }],
+    handler: async ({ supplierId }) => {
+      return products.filter((p) => String(p.SupplierID) === String(supplierId));
+    },
+  });
 
   // Dashboard metrics
   const dashboardCards = [
