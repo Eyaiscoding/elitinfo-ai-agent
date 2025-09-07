@@ -44,7 +44,7 @@ jobs:
           echo "NEXT_PUBLIC_RESTDB_INVOICE_LINES_URL=${{ secrets.NEXT_PUBLIC_RESTDB_INVOICE_LINES_URL }}" >> .env.build
           echo "NEXT_PUBLIC_RESTDB_PAYMENTS_URL=${{ secrets.NEXT_PUBLIC_RESTDB_PAYMENTS_URL }}" >> .env.build
           echo "NEXT_PUBLIC_RESTDB_PURCHASE_ORDERS_URL=${{ secrets.NEXT_PUBLIC_RESTDB_PURCHASE_ORDERS_URL }}" >> .env.build
-          # App Insights secret for telemetry
+          # App Insights secret
           echo "APPINSIGHTS_CONNECTION_STRING=${{ secrets.APPINSIGHTS_CONNECTION_STRING }}" >> .env.build
 
       - name: Build and push container image
@@ -52,13 +52,12 @@ jobs:
         run: |
           IMAGE_ID=${{ env.REGISTRY }}/$(echo ${{ env.REPO }} | tr '[:upper:]' '[:lower:]')
           echo "Building image $IMAGE_ID:${{ github.sha }}"
-          docker buildx build \
-            --build-arg PORT=${{ env.PORT }} \
+          docker build \
             --build-arg APPINSIGHTS_CONNECTION_STRING=${{ secrets.APPINSIGHTS_CONNECTION_STRING }} \
             -t $IMAGE_ID:${{ github.sha }} \
             -f ./Dockerfile \
-            . \
-            --push
+            .  # <-- context MUST be here
+          docker push $IMAGE_ID:${{ github.sha }}
           echo "image_id=$IMAGE_ID" >> $GITHUB_OUTPUT
 
   deploy:
