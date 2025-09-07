@@ -33,11 +33,12 @@ jobs:
 
       - name: Disable Docker Buildx
         run: |
+          echo "Disabling Buildx"
           export DOCKER_CLI_EXPERIMENTAL=disabled
 
       - name: Create .env.build file
         run: |
-          echo "NEXT_PUBLIC_COPILOTKIT_BACKEND_URL=${{ secrets.NEXT_PUBLIC_COPILOTKIT_BACKEND_URL }}" >> .env.build
+          echo "NEXT_PUBLIC_COPILOTKIT_BACKEND_URL=${{ secrets.NEXT_PUBLIC_COPILOTKIT_BACKEND_URL }}" > .env.build
           echo "NEXT_PUBLIC_COPILOTKIT_API=${{ secrets.NEXT_PUBLIC_COPILOTKIT_API }}" >> .env.build
           echo "NEXT_PUBLIC_GROQ_CLOUD_API_KEY=${{ secrets.NEXT_PUBLIC_GROQ_CLOUD_API_KEY }}" >> .env.build
           echo "NEXT_PUBLIC_RESTDB_API_KEY=${{ secrets.NEXT_PUBLIC_RESTDB_API_KEY }}" >> .env.build
@@ -50,12 +51,15 @@ jobs:
           echo "NEXT_PUBLIC_RESTDB_PURCHASE_ORDERS_URL=${{ secrets.NEXT_PUBLIC_RESTDB_PURCHASE_ORDERS_URL }}" >> .env.build
           echo "APPINSIGHTS_CONNECTION_STRING=${{ secrets.APPINSIGHTS_CONNECTION_STRING }}" >> .env.build
 
-      - name: Build and push container image
+      - name: Build and push Docker image
         id: docker_build
         run: |
           IMAGE_ID=${{ env.REGISTRY }}/$(echo ${{ env.REPO }} | tr '[:upper:]' '[:lower:]')
           echo "Building image $IMAGE_ID:${{ github.sha }}"
-          docker build -t $IMAGE_ID:${{ github.sha }} -f ./Dockerfile .
+          docker build --progress=plain \
+            --build-arg NEXT_TELEMETRY_DISABLED=1 \
+            --build-arg NEXT_PRIVATE_TURBOPACK=0 \
+            -t $IMAGE_ID:${{ github.sha }} -f ./Dockerfile .
           docker push $IMAGE_ID:${{ github.sha }}
           echo "image_id=$IMAGE_ID" >> $GITHUB_OUTPUT
 
@@ -82,5 +86,4 @@ jobs:
           app-name: ${{ env.AZURE_WEBAPP_NAME }}
           images: ${{ needs.build.outputs.IMAGE_ID }}:${{ github.sha }}
           slot-name: production
-          # Pass Application Insights connection string to Azure
           configuration-strings: APPINSIGHTS_CONNECTION_STRING=${{ secrets.APPINSIGHTS_CONNECTION_STRING }}
