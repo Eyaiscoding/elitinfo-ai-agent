@@ -48,13 +48,18 @@ jobs:
 
       - name: Build and push Docker image
         id: docker_build
-        env:
-          DOCKER_BUILDKIT: 0  # Disable BuildKit / Buildx
         run: |
+          # Disable BuildKit / Buildx completely
+          export DOCKER_BUILDKIT=0
+          export DOCKER_CLI_EXPERIMENTAL=disabled
+
           IMAGE_ID=${{ env.REGISTRY }}/$(echo ${{ env.REPO }} | tr '[:upper:]' '[:lower:]')
           echo "Building Docker image $IMAGE_ID:${{ github.sha }}"
-          docker build --build-arg APPINSIGHTS_CONNECTION_STRING=${{ secrets.APPINSIGHTS_CONNECTION_STRING }} -t $IMAGE_ID:${{ github.sha }} -f ./Dockerfile .
+
+          # Build with the correct context path (.)
+          docker build -t $IMAGE_ID:${{ github.sha }} --build-arg APPINSIGHTS_CONNECTION_STRING=${{ secrets.APPINSIGHTS_CONNECTION_STRING }} -f ./Dockerfile .
           docker push $IMAGE_ID:${{ github.sha }}
+
           echo "image_id=$IMAGE_ID" >> $GITHUB_OUTPUT
 
   deploy:
