@@ -20,22 +20,31 @@ ARG APPINSIGHTS_CONNECTION_STRING
 
 # Set runtime environment variables
 ENV NODE_ENV=production
-ENV PORT=$PORT
-ENV APPINSIGHTS_CONNECTION_STRING=$APPINSIGHTS_CONNECTION_STRING
+ENV PORT=${PORT}
+ENV APPINSIGHTS_CONNECTION_STRING=${APPINSIGHTS_CONNECTION_STRING}
+ENV NEXT_TELEMETRY_DISABLED=1
+ENV NEXT_PRIVATE_TURBOPACK=0
 
 # Install dependencies
-RUN if [ -f yarn.lock ]; then yarn --frozen-lockfile; \
-    elif [ -f package-lock.json ]; then npm install; \
-    elif [ -f pnpm-lock.yaml ]; then corepack enable pnpm && pnpm install --frozen-lockfile; \
-    else echo "Lockfile not found." && exit 1; \
+RUN if [ -f yarn.lock ]; then \
+      yarn --frozen-lockfile; \
+    elif [ -f package-lock.json ]; then \
+      npm install; \
+    elif [ -f pnpm-lock.yaml ]; then \
+      corepack enable pnpm && pnpm install --frozen-lockfile; \
+    else \
+      echo "Lockfile not found." && exit 1; \
     fi
 
-# Build Next.js app (force Webpack to avoid Turbopack dynamic require issues)
-RUN NEXT_TELEMETRY_DISABLED=1 NEXT_PRIVATE_TURBOPACK=0 \
-    if [ -f yarn.lock ]; then yarn run build; \
-    elif [ -f package-lock.json ]; then npm run build; \
-    elif [ -f pnpm-lock.yaml ]; then corepack enable pnpm && pnpm run build; \
-    else echo "Lockfile not found." && exit 1; \
+# Build Next.js app (forces Webpack to avoid Turbopack dynamic require errors)
+RUN if [ -f yarn.lock ]; then \
+      yarn build; \
+    elif [ -f package-lock.json ]; then \
+      npm run build; \
+    elif [ -f pnpm-lock.yaml ]; then \
+      pnpm run build; \
+    else \
+      echo "Lockfile not found." && exit 1; \
     fi
 
 # Create non-root user
