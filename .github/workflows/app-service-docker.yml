@@ -44,7 +44,6 @@ jobs:
           echo "NEXT_PUBLIC_RESTDB_INVOICE_LINES_URL=${{ secrets.NEXT_PUBLIC_RESTDB_INVOICE_LINES_URL }}" >> .env.build
           echo "NEXT_PUBLIC_RESTDB_PAYMENTS_URL=${{ secrets.NEXT_PUBLIC_RESTDB_PAYMENTS_URL }}" >> .env.build
           echo "NEXT_PUBLIC_RESTDB_PURCHASE_ORDERS_URL=${{ secrets.NEXT_PUBLIC_RESTDB_PURCHASE_ORDERS_URL }}" >> .env.build
-          # App Insights secret
           echo "APPINSIGHTS_CONNECTION_STRING=${{ secrets.APPINSIGHTS_CONNECTION_STRING }}" >> .env.build
 
       - name: Build and push container image
@@ -56,7 +55,7 @@ jobs:
             --build-arg APPINSIGHTS_CONNECTION_STRING=${{ secrets.APPINSIGHTS_CONNECTION_STRING }} \
             -t $IMAGE_ID:${{ github.sha }} \
             -f ./Dockerfile \
-            .  # <-- context MUST be here
+            .   # <-- context
           docker push $IMAGE_ID:${{ github.sha }}
           echo "image_id=$IMAGE_ID" >> $GITHUB_OUTPUT
 
