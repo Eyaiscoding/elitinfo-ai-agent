@@ -30,7 +30,8 @@ RUN if [ -f yarn.lock ]; then yarn run build; \
 
 # Set production environment
 ENV NODE_ENV=production
-ENV PORT=3000
+# Azure provides a dynamic PORT, default to 3000 if not set
+ENV PORT=${PORT:-3000}
 
 # Create non-root user
 RUN addgroup --system --gid 1001 nodejs \
@@ -43,7 +44,7 @@ RUN chown -R nextjs:nodejs /app
 USER nextjs
 
 # Expose port
-EXPOSE 3000
+EXPOSE ${PORT}
 
-# Start app
-CMD ["npm", "run", "start"]
+# Start app on Azure dynamic port
+CMD ["sh", "-c", "npm run start -- -p $PORT"]

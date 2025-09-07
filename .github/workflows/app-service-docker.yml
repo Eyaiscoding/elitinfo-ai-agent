@@ -28,7 +28,7 @@ jobs:
         with:
           registry: ${{ env.REGISTRY }}
           username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
+          password: ${{ secrets.GHCR_PAT }}
 
       - name: Create .env.build file
         run: |
@@ -47,7 +47,7 @@ jobs:
       - name: Build and push container image
         id: docker_build
         run: |
-          IMAGE_ID=${{ env.REGISTRY }}/$(echo ${{ env.REPO }} | tr '[:upper:]' '[:lower:]')
+          IMAGE_ID=${{ env.REGISTRY }}/${{ env.REPO }}
           echo "IMAGE_ID=$IMAGE_ID" >> $GITHUB_ENV
           docker build -t $IMAGE_ID:${{ github.sha }} -f ./Dockerfile .
           docker push $IMAGE_ID:${{ github.sha }}
@@ -57,13 +57,11 @@ jobs:
     needs: build
 
     steps:
-      - name: Login to Azure
-        uses: azure/login@v1
-        with:
-          creds: ${{ secrets.AZURE_CREDENTIALS }}
-
       - name: Deploy to Azure Web App
+        id: deploy-to-webapp
         uses: azure/webapps-deploy@v3
         with:
           app-name: ${{ env.AZURE_WEBAPP_NAME }}
           images: ${{ env.IMAGE_ID }}:${{ github.sha }}
+          registry-username: ${{ github.actor }}
+          registry-password: ${{ secrets.GHCR_PAT }}
