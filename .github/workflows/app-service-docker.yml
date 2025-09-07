@@ -48,6 +48,8 @@ jobs:
 
       - name: Build and push Docker image
         id: docker_build
+        env:
+          DOCKER_BUILDKIT: 0  # Disable BuildKit / Buildx
         run: |
           IMAGE_ID=${{ env.REGISTRY }}/$(echo ${{ env.REPO }} | tr '[:upper:]' '[:lower:]')
           echo "Building Docker image $IMAGE_ID:${{ github.sha }}"
