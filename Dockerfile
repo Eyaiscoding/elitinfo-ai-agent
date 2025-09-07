@@ -33,9 +33,6 @@ ENV PORT=3000
 RUN addgroup --system --gid 1001 nodejs \
  && adduser --system --uid 1001 nextjs
 
-# Copy .env
-COPY --chown=nextjs:nodejs .env ./
-
 # Set ownership for all files
 RUN chown -R nextjs:nodejs /app
 
