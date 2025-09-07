@@ -14,10 +14,11 @@ env:
 jobs:
   build:
     runs-on: ubuntu-latest
-
     permissions:
       contents: read
       packages: write
+    outputs:
+      IMAGE_ID: ${{ steps.docker_build.outputs.image_id }}  # expose image_id to deploy job
 
     steps:
       - name: Checkout repository
@@ -28,7 +29,6 @@ jobs:
         with:
           registry: ${{ env.REGISTRY }}
           username: ${{ github.actor }}
-          # Use GHCR_PAT secret here for full read/write access
           password: ${{ secrets.GHCR_PAT }}
 
       - name: Create .env.build file
@@ -49,9 +49,9 @@ jobs:
         id: docker_build
         run: |
           IMAGE_ID=${{ env.REGISTRY }}/$(echo ${{ env.REPO }} | tr '[:upper:]' '[:lower:]')
-          echo "IMAGE_ID=$IMAGE_ID" >> $GITHUB_ENV
           docker build -t $IMAGE_ID:${{ github.sha }} -f ./Dockerfile .
           docker push $IMAGE_ID:${{ github.sha }}
+          echo "image_id=$IMAGE_ID" >> $GITHUB_OUTPUT  # set as output for deploy job
 
   deploy:
     runs-on: ubuntu-latest
@@ -74,4 +74,4 @@ jobs:
         uses: azure/webapps-deploy@v3
         with:
           app-name: ${{ env.AZURE_WEBAPP_NAME }}
-          images: ${{ env.IMAGE_ID }}:${{ github.sha }}
+          images: ${{ needs.build.outputs.IMAGE_ID }}:${{ github.sha }}  # use build output
