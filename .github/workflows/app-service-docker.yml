@@ -31,11 +31,6 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GHCR_PAT }}
 
-      - name: Disable Docker Buildx
-        run: |
-          echo "Disabling Buildx"
-          export DOCKER_CLI_EXPERIMENTAL=disabled
-
       - name: Create .env.build file
         run: |
           echo "NEXT_PUBLIC_COPILOTKIT_BACKEND_URL=${{ secrets.NEXT_PUBLIC_COPILOTKIT_BACKEND_URL }}" > .env.build
@@ -56,7 +51,7 @@ jobs:
         run: |
           IMAGE_ID=${{ env.REGISTRY }}/$(echo ${{ env.REPO }} | tr '[:upper:]' '[:lower:]')
           echo "Building image $IMAGE_ID:${{ github.sha }}"
-          docker build --progress=plain \
+          docker build --no-cache --progress=plain \
             --build-arg NEXT_TELEMETRY_DISABLED=1 \
             --build-arg NEXT_PRIVATE_TURBOPACK=0 \
             -t $IMAGE_ID:${{ github.sha }} -f ./Dockerfile .

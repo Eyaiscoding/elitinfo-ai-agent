@@ -4,12 +4,12 @@
 FROM node:20-alpine
 WORKDIR /app
 
-# Install necessary system libraries
-RUN apk add --no-cache libc6-compat bash
+# Install necessary system libraries for CSS/PostCSS build
+RUN apk add --no-cache libc6-compat bash python3 g++ make
 
 # Copy project files
 COPY package.json yarn.lock* package-lock.json* pnpm-lock.yaml* ./
-COPY . .
+COPY . ./
 
 # Copy env file for build
 COPY .env.build .env
@@ -22,6 +22,8 @@ ARG APPINSIGHTS_CONNECTION_STRING
 ENV NODE_ENV=production
 ENV PORT=${PORT}
 ENV APPINSIGHTS_CONNECTION_STRING=${APPINSIGHTS_CONNECTION_STRING}
+
+# Force Next.js to use Webpack instead of Turbopack
 ENV NEXT_TELEMETRY_DISABLED=1
 ENV NEXT_PRIVATE_TURBOPACK=0
 
@@ -36,13 +38,13 @@ RUN if [ -f yarn.lock ]; then \
       echo "Lockfile not found." && exit 1; \
     fi
 
-# Build Next.js app (forces Webpack to avoid Turbopack dynamic require errors)
+# Build Next.js app using Webpack (Turbopack disabled)
 RUN if [ -f yarn.lock ]; then \
       yarn build; \
     elif [ -f package-lock.json ]; then \
       npm run build; \
     elif [ -f pnpm-lock.yaml ]; then \
-      pnpm run build; \
+      corepack enable pnpm && pnpm run build; \
     else \
       echo "Lockfile not found." && exit 1; \
     fi
