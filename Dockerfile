@@ -15,25 +15,17 @@ COPY . ./
 COPY .env.build .env
 
 # Install dependencies
-RUN if [ -f yarn.lock ]; then \
-      yarn --frozen-lockfile; \
-    elif [ -f package-lock.json ]; then \
-      npm install; \
-    elif [ -f pnpm-lock.yaml ]; then \
-      corepack enable pnpm && pnpm install --frozen-lockfile; \
-    else \
-      echo "Lockfile not found." && exit 1; \
+RUN if [ -f yarn.lock ]; then yarn --frozen-lockfile; \
+    elif [ -f package-lock.json ]; then npm install; \
+    elif [ -f pnpm-lock.yaml ]; then corepack enable pnpm && pnpm install --frozen-lockfile; \
+    else echo "Lockfile not found." && exit 1; \
     fi
 
 # Build Next.js app
-RUN if [ -f yarn.lock ]; then \
-      yarn run build; \
-    elif [ -f package-lock.json ]; then \
-      npm run build; \
-    elif [ -f pnpm-lock.yaml ]; then \
-      corepack enable pnpm && pnpm run build; \
-    else \
-      echo "Lockfile not found." && exit 1; \
+RUN if [ -f yarn.lock ]; then yarn run build; \
+    elif [ -f package-lock.json ]; then npm run build; \
+    elif [ -f pnpm-lock.yaml ]; then corepack enable pnpm && pnpm run build; \
+    else echo "Lockfile not found." && exit 1; \
     fi
 
 # Set production environment
