@@ -30,6 +30,20 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
+      - name: Create .env.build file
+        run: |
+          echo "NEXT_PUBLIC_COPILOTKIT_BACKEND_URL=${{ secrets.NEXT_PUBLIC_COPILOTKIT_BACKEND_URL }}" >> .env.build
+          echo "NEXT_PUBLIC_COPILOTKIT_API=${{ secrets.NEXT_PUBLIC_COPILOTKIT_API }}" >> .env.build
+          echo "NEXT_PUBLIC_GROQ_CLOUD_API_KEY=${{ secrets.NEXT_PUBLIC_GROQ_CLOUD_API_KEY }}" >> .env.build
+          echo "NEXT_PUBLIC_RESTDB_API_KEY=${{ secrets.NEXT_PUBLIC_RESTDB_API_KEY }}" >> .env.build
+          echo "NEXT_PUBLIC_RESTDB_CUSTOMERS_URL=${{ secrets.NEXT_PUBLIC_RESTDB_CUSTOMERS_URL }}" >> .env.build
+          echo "NEXT_PUBLIC_RESTDB_SUPPLIERS_URL=${{ secrets.NEXT_PUBLIC_RESTDB_SUPPLIERS_URL }}" >> .env.build
+          echo "NEXT_PUBLIC_RESTDB_PRODUCTS_URL=${{ secrets.NEXT_PUBLIC_RESTDB_PRODUCTS_URL }}" >> .env.build
+          echo "NEXT_PUBLIC_RESTDB_INVOICES_URL=${{ secrets.NEXT_PUBLIC_RESTDB_INVOICES_URL }}" >> .env.build
+          echo "NEXT_PUBLIC_RESTDB_INVOICE_LINES_URL=${{ secrets.NEXT_PUBLIC_RESTDB_INVOICE_LINES_URL }}" >> .env.build
+          echo "NEXT_PUBLIC_RESTDB_PAYMENTS_URL=${{ secrets.NEXT_PUBLIC_RESTDB_PAYMENTS_URL }}" >> .env.build
+          echo "NEXT_PUBLIC_RESTDB_PURCHASE_ORDERS_URL=${{ secrets.NEXT_PUBLIC_RESTDB_PURCHASE_ORDERS_URL }}" >> .env.build
+
       - name: Build and push container image
         id: docker_build
         run: |

@@ -11,6 +11,9 @@ RUN apk add --no-cache libc6-compat bash
 COPY package.json yarn.lock* package-lock.json* pnpm-lock.yaml* ./
 COPY . .
 
+# Copy env file for build
+COPY .env.build .env
+
 # Install dependencies
 RUN if [ -f yarn.lock ]; then yarn --frozen-lockfile; \
     elif [ -f package-lock.json ]; then npm install; \
