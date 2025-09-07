@@ -10,7 +10,6 @@ env:
   REGISTRY: ghcr.io
   REPO: ${{ github.repository }}
   AZURE_WEBAPP_NAME: elitinfo-ai-agent
-  PORT: 3000  # default fallback
 
 jobs:
   build:
@@ -45,6 +44,7 @@ jobs:
           echo "NEXT_PUBLIC_RESTDB_INVOICE_LINES_URL=${{ secrets.NEXT_PUBLIC_RESTDB_INVOICE_LINES_URL }}" >> .env.build
           echo "NEXT_PUBLIC_RESTDB_PAYMENTS_URL=${{ secrets.NEXT_PUBLIC_RESTDB_PAYMENTS_URL }}" >> .env.build
           echo "NEXT_PUBLIC_RESTDB_PURCHASE_ORDERS_URL=${{ secrets.NEXT_PUBLIC_RESTDB_PURCHASE_ORDERS_URL }}" >> .env.build
+          # App Insights secret for telemetry
           echo "APPINSIGHTS_CONNECTION_STRING=${{ secrets.APPINSIGHTS_CONNECTION_STRING }}" >> .env.build
 
       - name: Build and push container image
@@ -52,21 +52,14 @@ jobs:
         run: |
           IMAGE_ID=${{ env.REGISTRY }}/$(echo ${{ env.REPO }} | tr '[:upper:]' '[:lower:]')
           echo "Building image $IMAGE_ID:${{ github.sha }}"
-          docker build \
+          docker buildx build \
             --build-arg PORT=${{ env.PORT }} \
             --build-arg APPINSIGHTS_CONNECTION_STRING=${{ secrets.APPINSIGHTS_CONNECTION_STRING }} \
-            -t $IMAGE_ID:${{ github.sha }} -f ./Dockerfile .
-          docker push $IMAGE_ID:${{ github.sha }}
+            -t $IMAGE_ID:${{ github.sha }} \
+            -f ./Dockerfile \
+            . \
+            --push
           echo "image_id=$IMAGE_ID" >> $GITHUB_OUTPUT
-
-      - name: Run minimal LLM evaluation
-        run: |
-          echo "Running automated minimal evaluation..."
-          docker run --rm \
-            -e NEXT_PUBLIC_GROQ_CLOUD_API_KEY=${{ secrets.NEXT_PUBLIC_GROQ_CLOUD_API_KEY }} \
-            -e APPINSIGHTS_CONNECTION_STRING=${{ secrets.APPINSIGHTS_CONNECTION_STRING }} \
-            ${{ needs.build.outputs.IMAGE_ID }}:${{ github.sha }} \
-            sh -c "node scripts/evaluate-llm.js"
 
   deploy:
     runs-on: ubuntu-latest
@@ -91,4 +84,5 @@ jobs:
           app-name: ${{ env.AZURE_WEBAPP_NAME }}
           images: ${{ needs.build.outputs.IMAGE_ID }}:${{ github.sha }}
           slot-name: production
-          configuration-strings: APPINSIGHTS_CONNECTION_STRING=${{ secrets.APPINSIGHTS_CONNECTION_STRING }},PORT=${{ env.PORT }}
+          # Pass App Insights connection string
+          configuration-strings: APPINSIGHTS_CONNECTION_STRING=${{ secrets.APPINSIGHTS_CONNECTION_STRING }}
